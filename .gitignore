@@ -4,16 +4,16 @@ coverage/
 measurements/
 *.log
 
-# Локальные настройки IDE
+# Local IDE settings
 .idea/
 .vscode/
 
-# Локальное окружение
+# Local environment
 .env
 .env.*
 !.env.example
 
-# Служебные файлы TypeScript и ОС
+# TypeScript and OS generated files
 *.tsbuildinfo
 .DS_Store
 Thumbs.db

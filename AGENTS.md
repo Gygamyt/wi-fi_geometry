@@ -1,4 +1,4 @@
-# Инструкции для агентов
+# Agent instructions
 
-Перед работой прочитайте и соблюдайте [правила проекта](docs/agents/project-rules.md).
-Они применяются ко всему репозиторию.
+Before making changes, read and follow the [project rules](docs/agents/project-rules.md).
+They apply to the entire repository.

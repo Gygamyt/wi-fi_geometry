@@ -1,10 +1,27 @@
 # Wi-Fi Mapper
 
-Исследовательский pet project: изучаем, какие Wi-Fi-данные доступны на Windows со встроенным адаптером ноутбука. Сейчас — первый шаг v0.1: получить исходный вывод ОС. История, анализ, Rust и UI пока не реализуются.
+A research pet project exploring the Wi-Fi data available on Windows with a laptop's built-in adapter. The current scope is the first step of v0.1: inspecting raw OS output. Measurement history, analysis, Rust and graphical interfaces are future work.
 
-## Запуск
+## Getting started
 
-Нужны Windows и Node.js 24.12 или новее. Для запуска нет зависимостей и сборки:
+Requires Windows and Node.js 24.12 or newer. Install dependencies with `npm ci`; no build is required.
+
+```powershell
+npm run start
+```
+
+Without arguments, the CLI opens an interactive Clack session: **Wi-Fi adapter**, **Current connection**, **Available networks**, **Output mode**, and **Exit**. Use the arrow keys and Enter to select an action. Select Exit or press Ctrl+C in the menu to end the session.
+
+```powershell
+npm run start -- --clean    # Default: one result at a time
+npm run start -- --history  # Preserve previous results in the terminal
+```
+
+In **clean** mode, the screen is cleared before each menu and result. Results stay visible until you confirm **Back to menu**; you can also choose **Exit**. In **history** mode, commands append their output and return directly to the menu. The **Output mode** menu item switches modes during the session; the choice lasts until exit. Use a startup flag to select the mode for the next session. Clearing depends on the terminal's support and is not a secure deletion of terminal logs.
+
+Results have a separate heading and terminal-width separators. The body remains raw Windows output, including its spacing and language; field alignment requires a future parser.
+
+For a single command:
 
 ```powershell
 node src/cli.ts --help
@@ -13,101 +30,104 @@ node src/cli.ts interfaces
 node src/cli.ts networks
 ```
 
-Если npm доступен, можно использовать `npm start -- networks`. Для прямого запуска npm не нужен.
+You can also use `npm run start -- networks`. Direct commands preserve the netsh exit code and support output redirection. The interactive menu requires a TTY for both input and output; otherwise, specify a command explicitly.
 
-Node.js исполняет TypeScript, удаляя поддерживаемые аннотации типов. Это **не проверка типов**. Для отдельной проверки установите зависимости разработки:
+Chalk styles the help title and errors according to terminal color support. Raw netsh output is forwarded unchanged. Disable colors with `FORCE_COLOR=0` (PowerShell: `$env:FORCE_COLOR = '0'`).
+
+## Language
+
+All project-owned text is English for now, including prompts, comments, tests and documentation. Localization is planned for a later stage; no i18n framework or language selection is implemented yet. Windows messages and network names retain their original language.
+
+## Development
+
+Use **npm** only. `package-lock.json` pins dependency versions; use `npm ci` for repeatable installation and `npm install` when changing dependencies.
 
 ```powershell
-npm install
 npm run typecheck
-```
-
-Менеджер пакетов проекта — **npm**. `package-lock.json` фиксирует версии зависимостей; для повторной установки используйте `npm ci`.
-
-Проверка и автоисправление оформления:
-
-```powershell
 npm run lint
 npm run lint:fix
+npm test
+npm run test:run
 ```
 
-ESLint проверяет JS/TS-код, а ESLint Stylistic исправляет оформление под стиль `src/cli.ts`: четыре пробела, одинарные кавычки, точки с запятой и отсутствие пробелов внутри фигурных скобок. Проверка типов выполняется отдельно через `npm run typecheck`.
+- `typecheck` checks types without generating JavaScript.
+- `lint` checks JS/TS code and formatting.
+- `lint:fix` applies available fixes using the style in `src/cli.ts`: four spaces, single quotes, semicolons and no spaces inside braces.
+- `test` runs Vitest in watch mode and reruns related tests after changes. Press `q` or Ctrl+C to exit.
+- `test:run` runs the tests once and exits.
 
-Юнит-тесты запускаются через Vitest:
+Tests live beside the implementation in `*.test.ts` files. Add tests for new logic, errors and edge cases. Current tests cover the CLI, interactive session and netsh wrapper using mocks; they do not require real Wi-Fi hardware or Windows permissions. They do not verify the actual driver or scan freshness.
 
-```powershell
-npm test          # Watch: повторяет связанные тесты при изменении кода
-npm run test:run  # Один прогон с завершением процесса
-```
+Node.js executes TypeScript by stripping supported type annotations; it does not check types or read `tsconfig.json`. Type checking includes source files, tests and the Vitest configuration. Key compiler settings:
 
-Для выхода из watch-режима нажмите `q` или Ctrl+C. Тесты лежат рядом с кодом в `*.test.ts`; добавляем их для новой логики, ошибок и граничных случаев. Текущие тесты проверяют CLI и обёртку netsh с моками: реальное Wi-Fi-оборудование и разрешения Windows им не нужны. Это не проверка реального драйвера или свежести сканирования. Проверка типов включает тесты и конфигурацию Vitest.
+- `NodeNext`: Node.js module and import resolution rules, respecting `type: module`.
+- `allowImportingTsExtensions`: permits `.ts` import extensions, preventing TS5097.
+- `noEmit`: checks types without generating JavaScript; Node.js runs the source files.
+- `strict` and `noUncheckedIndexedAccess`: strict checks, including potentially missing array elements.
+- `verbatimModuleSyntax` and `erasableSyntaxOnly`: enforce syntax compatible with direct execution in Node.js.
+- `types: ["node"]` and `lib: ["ES2024"]`: Node.js and JavaScript APIs without browser globals.
 
-В `tsconfig.json` включены:
+TypeScript and `@types/node` are development dependencies.
 
-- `NodeNext` — правила модулей и разрешения импортов Node.js с учётом `type: module`.
-- `allowImportingTsExtensions` — разрешает используемые импорты с `.ts`, устраняя TS5097.
-- `noEmit` — компилятор проверяет типы и не создаёт JavaScript; исходники исполняет Node.js.
-- `strict` и `noUncheckedIndexedAccess` — строгая проверка типов и учёт отсутствующих элементов массивов.
-- `verbatimModuleSyntax` и `erasableSyntaxOnly` — проверяют совместимость синтаксиса с выбранным прямым запуском в Node.js.
-- `types: ["node"]` и `lib: ["ES2024"]` — API Node.js и JavaScript без браузерных глобальных объектов.
-
-TypeScript и `@types/node` нужны только для разработки. Node.js сам `tsconfig.json` не читает.
-
-## Минимальная структура
+## Project structure
 
 ```text
-AGENTS.md       Указатель на инструкции для агентов
+AGENTS.md                Entry point for agent instructions
 docs/agents/
-  project-rules.md  Правила работы и границы текущей итерации
-README.md       Запуск, смысл команд и ограничения
-package.json    Команды запуска и проверки типов, devDependencies
-tsconfig.json   Настройки проверки TypeScript без сборки
-eslint.config.js  Проверка кода и правила оформления
-vitest.config.ts  Среда Node.js и изоляция моков
-package-lock.json  Зафиксированные версии npm-зависимостей
+  project-rules.md       Project rules and iteration scope
+README.md                Usage, commands and limitations
+package.json             Scripts and dependencies
+package-lock.json        Pinned npm dependency versions
+tsconfig.json            Type checking without a build
+eslint.config.js         Code checks and formatting rules
+vitest.config.ts         Node.js environment and mock isolation
 src/
-  cli.ts        Выбор команды, справка, обработка ошибок
-  cli.test.ts   Тесты команд и обработки ошибок CLI
-  netsh.ts      Обращение к Windows, без логики представления
-  netsh.test.ts  Тесты запуска и завершения процесса
+  cli.ts                 Command selection, help and errors
+  cli.test.ts            CLI behavior tests
+  netsh.ts               Windows process access
+  netsh.test.ts          Process startup and completion tests
+  session.ts             Interactive Clack menu
+  session.test.ts        Repeated selection and exit tests
+  terminal.ts            Terminal screen and scrollback clearing
+  terminal.test.ts       TTY and redirected output checks
 ```
 
-Сначала смотрим исходный вывод: его поля зависят от версии Windows, драйвера и языка системы. Преждевременный парсер скроет эти различия. CLI запускает netsh напрямую, без командной оболочки, наследует потоки вывода и передаёт код завершения. При перенаправлении в файл байты остаются в кодировке netsh; это не обещание UTF-8. Для будущего парсинга кодировку нужно будет обработать явно.
+Inspect raw output before writing a parser: available fields depend on the Windows version, driver and system language. The CLI launches netsh directly without a shell, inherits its streams and forwards its exit code for direct commands. Redirected output retains the encoding used by netsh; UTF-8 is not guaranteed. A future parser must handle encoding explicitly.
 
-## Что выполняется
+## Commands and available data
 
-| CLI | Команда Windows | Что изучаем |
+| CLI | Windows command | What to inspect |
 | --- | --- | --- |
-| `drivers` | `netsh wlan show drivers` | Модель/драйвер адаптера, заявленные стандарты и диапазоны |
-| `interfaces` | `netsh wlan show interfaces` | Состояние интерфейса; при подключении — сведения о текущем соединении |
-| `networks` | `netsh wlan show networks mode=bssid` | Список видимых сетей и отдельных BSSID |
+| `drivers` | `netsh wlan show drivers` | Adapter model and driver, advertised standards and bands |
+| `interfaces` | `netsh wlan show interfaces` | Interface state and current connection details |
+| `networks` | `netsh wlan show networks mode=bssid` | Visible networks and individual BSSID details |
 
-Эти команды можно выполнить и напрямую в PowerShell, чтобы сравнить вывод с CLI.
+Run these Windows commands directly in PowerShell to compare their output with the CLI.
 
-В списке сетей обычно доступны SSID, BSSID, качество сигнала в процентах, тип радио, канал, параметры защиты; диапазон и другие поля зависят от системы. Подключаться к каждой сети для получения этого списка не нужно. Это не даёт доступ к её трафику или клиентам. Сведения о текущем соединении, включая скорости приёма/передачи, относятся к собственному подключению.
+The network list typically includes SSIDs, BSSIDs, signal quality percentages, radio types, channels and security settings. Bands and additional fields depend on the system. Listing a network does not require connecting to it and does not grant access to its traffic or clients. Current connection details, including transmit and receive link rates, apply to your own connection.
 
-- SSID — имя сети; одно имя может соответствовать нескольким BSSID.
-- BSSID — идентификатор BSS, обычно MAC-адрес интерфейса точки доступа; это не обязательно отдельный физический роутер.
-- Проценты качества сигнала нельзя записывать как измеренный RSSI в dBm. Если ОС отдельно показывает RSSI, рассматриваем его как отдельное поле.
-- Канал без диапазона может быть неоднозначен. Точную частоту не выдумываем, если её нет в выводе.
-- Заявленная поддержка диапазона или стандарта драйвером не означает, что сейчас видны сети всех этих типов.
-- Вывод может отражать кэш Windows. Вызов `show networks` не является гарантией свежего сканирования.
-- CSI, время пролёта и геометрию помещения эти команды не предоставляют. Стены и расстояния по процентам сигнала не определяем.
+- An SSID is a network name; several BSSIDs can share it.
+- A BSSID identifies a BSS, usually through an access point interface MAC address. It does not necessarily identify a separate physical router.
+- Signal quality percentages are not measured RSSI in dBm. If Windows reports RSSI separately, treat it as a separate field.
+- A channel number without a band can be ambiguous. Do not invent an exact frequency when none is reported.
+- Driver support for a band or standard does not mean networks of every supported type are currently visible.
+- Output may reflect the Windows cache. Calling `show networks` does not guarantee a fresh scan.
+- These commands do not provide CSI, time of flight or room geometry. Signal quality percentages do not establish walls or distances.
 
-## Если Windows не отдаёт данные
+## When Windows denies access
 
-Сначала прочитайте исходное сообщение. На современных версиях Windows доступ к BSSID и части сведений о соединении связан с разрешением геолокации.
+Read the original Windows message first. On modern Windows versions, access to BSSIDs and some connection details is tied to location permission.
 
-Если netsh явно просит Location permission, откройте **Параметры → Конфиденциальность и безопасность → Расположение** (`ms-settings:privacy-location`), проверьте разрешения и повторите ту же команду. CLI сам разрешения не меняет.
+If netsh explicitly requests location permission, open **Settings > Privacy & security > Location** (`ms-settings:privacy-location`), review permissions and repeat the command. The CLI does not change permissions automatically.
 
-Если после этого остаётся ошибка 5 / Access denied / requires elevation, отдельно проверяем контекст запуска и политики Windows. Не считаем запуск администратором универсальным исправлением разрешений геолокации. Если интерфейса нет или служба WLAN недоступна, netsh выведет соответствующее сообщение.
+If error 5, Access denied or requires elevation persists, investigate the execution context and Windows policies separately. Running as administrator is not a universal fix for location permissions. Missing interfaces and unavailable WLAN services are reported by netsh.
 
-## Критерий завершения первого шага
+## First-step completion criteria
 
-Запустить три команды, посмотреть реальные поля и ограничения доступа на этом ноутбуке. После этого вместе разобрать вывод и выбрать одно поле для следующего небольшого изменения в рамках v0.1. Реальные SSID, BSSID и MAC-адреса в репозиторий не добавлять.
+Run all three commands and inspect the fields and access restrictions on this laptop. Then review the output together and choose one field for the next small v0.1 change. Do not commit real SSIDs, BSSIDs or MAC addresses.
 
-## Документация
+## References
 
 - [Microsoft: netsh wlan](https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/netsh-wlan)
-- [Microsoft: изменения доступа к Wi-Fi и геолокации](https://learn.microsoft.com/en-us/windows/win32/nativewifi/wi-fi-access-location-changes)
-- [Node.js: выполнение TypeScript](https://nodejs.org/api/typescript.html)
+- [Microsoft: Wi-Fi access and location changes](https://learn.microsoft.com/en-us/windows/win32/nativewifi/wi-fi-access-location-changes)
+- [Node.js: TypeScript execution](https://nodejs.org/api/typescript.html)

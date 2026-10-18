@@ -26,7 +26,7 @@ describe('runNetsh', () => {
         ['drivers', ['wlan', 'show', 'drivers']],
         ['interfaces', ['wlan', 'show', 'interfaces']],
         ['networks', ['wlan', 'show', 'networks', 'mode=bssid']],
-    ] as const)('запускает %s напрямую с исходными потоками вывода', async (command, args) => {
+    ] as const)('runs %s directly with inherited output streams', async (command, args) => {
         const result = runNetsh(command);
 
         expect(spawnMock).toHaveBeenCalledExactlyOnceWith(
@@ -39,19 +39,19 @@ describe('runNetsh', () => {
         await expect(result).resolves.toBe(0);
     });
 
-    it.each([0, 1, 5])('передаёт код завершения %s', async (code) => {
+    it.each([0, 1, 5])('forwards exit code %s', async (code) => {
         const result = runNetsh('networks');
         child.emit('close', code, null);
         await expect(result).resolves.toBe(code);
     });
 
-    it('считает отсутствие кода завершения ошибкой', async () => {
+    it('treats a missing exit code as a failure', async () => {
         const result = runNetsh('networks');
         child.emit('close', null, null);
         await expect(result).resolves.toBe(1);
     });
 
-    it('передаёт ошибку запуска процесса', async () => {
+    it('propagates a process startup error', async () => {
         const error = new Error('spawn ENOENT');
         const result = runNetsh('networks');
         child.emit('error', error);
@@ -59,25 +59,25 @@ describe('runNetsh', () => {
         await expect(result).rejects.toBe(error);
     });
 
-    it('передаёт синхронную ошибку spawn', async () => {
-        const error = new Error('Не удалось создать процесс');
+    it('propagates a synchronous spawn error', async () => {
+        const error = new Error('Could not create process');
         spawnMock.mockImplementation(() => { throw error; });
         await expect(runNetsh('networks')).rejects.toBe(error);
     });
 
-    it('сообщает о прерывании процесса, в том числе по тайм-ауту', async () => {
+    it('reports process termination, including a timeout', async () => {
         const result = runNetsh('networks');
         child.emit('close', null, 'SIGTERM');
-        await expect(result).rejects.toThrow('netsh прерван (SIGTERM)');
+        await expect(result).rejects.toThrow('netsh interrupted (SIGTERM)');
     });
 
-    it('отклоняет запуск вне Windows до обращения к ОС', () => {
+    it('rejects non-Windows execution before calling the OS', () => {
         Object.defineProperty(process, 'platform', {value: 'linux', configurable: true});
-        expect(() => runNetsh('networks')).toThrow('требуется Windows');
+        expect(() => runNetsh('networks')).toThrow('requires Windows');
         expect(spawnMock).not.toHaveBeenCalled();
     });
 
-    it('отклоняет запуск без пути к Windows', () => {
+    it('rejects execution without the Windows path', () => {
         vi.stubEnv('SystemRoot', undefined);
         expect(() => runNetsh('networks')).toThrow('SystemRoot');
         expect(spawnMock).not.toHaveBeenCalled();

@@ -9,16 +9,16 @@ const commands = {
 
 export type WifiCommand = keyof typeof commands;
 
-// Наследуем потоки: не декодируем локализованный вывод как UTF-8.
-// Пока возвращаем исходный вывод ОС, а не нормализованные измерения.
+// Inherit streams to avoid decoding localized output as UTF-8.
+// For now, forward raw OS output rather than normalized measurements.
 export function runNetsh(command: WifiCommand): Promise<number> {
     if (process.platform !== 'win32') {
-        throw new Error('Для сбора данных через netsh требуется Windows.');
+        throw new Error('Collecting data through netsh requires Windows.');
     }
 
     const windowsDirectory = process.env.SystemRoot;
     if (!windowsDirectory) {
-        throw new Error('Не найдена переменная SystemRoot с путём к Windows.');
+        throw new Error('The SystemRoot environment variable containing the Windows path is missing.');
     }
 
     return new Promise((resolve, reject) => {
@@ -32,7 +32,7 @@ export function runNetsh(command: WifiCommand): Promise<number> {
         child.once('error', reject);
         child.once('close', (code, signal) => {
             if (signal) {
-                reject(new Error(`netsh прерван (${signal}); лимит выполнения — 30 секунд.`));
+                reject(new Error(`netsh interrupted (${signal}); execution timeout is 30 seconds.`));
                 return;
             }
             resolve(code ?? 1);
