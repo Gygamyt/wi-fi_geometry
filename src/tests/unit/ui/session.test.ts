@@ -1,9 +1,9 @@
 import {cancel, confirm, intro, log, outro, select} from '@clack/prompts';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
-import {runSession} from './session.ts';
-import {clearTerminal} from './terminal.ts';
+import {runSession} from '../../../ui/session.ts';
+import {clearTerminal} from '../../../ui/terminal.ts';
 
-vi.mock('./terminal.ts', () => ({clearTerminal: vi.fn()}));
+vi.mock('../../../ui/terminal.ts', () => ({clearTerminal: vi.fn()}));
 
 vi.mock('@clack/prompts', () => ({
     intro: vi.fn(),

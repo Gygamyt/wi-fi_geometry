@@ -1,7 +1,8 @@
 import {stripVTControlCharacters} from 'node:util';
 import {chalkStderr} from 'chalk';
-import {captureNetworks} from './netsh.ts';
-import {decodeNetshOutput, parseNetworks} from './network-parser.ts';
+import {captureNetworks} from '../collectors/netsh.ts';
+import {decodeNetshOutput} from '../collectors/encoding.ts';
+import {parseNetworks} from '../parsers/network-parser.ts';
 
 function safeLabel(value: string): string {
     // Network names are external input and must not control the terminal.

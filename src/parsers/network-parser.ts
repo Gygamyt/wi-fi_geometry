@@ -1,37 +1,25 @@
-export type NetworkObservation = {
-    ssid: string;
-    bssid: string;
-    signalQualityPercent: number | null;
-    bandGHz: number | null;
-    channel: number | null;
-    radioType: string | null;
-};
-
-export function decodeNetshOutput(data: Buffer, encoding = process.env.WIFI_MAPPER_ENCODING || 'utf-8'): string {
-    if (data[0] === 0xff && data[1] === 0xfe) {
-        encoding = 'utf-16le';
-    } else if (data[0] === 0xfe && data[1] === 0xff) {
-        encoding = 'utf-16be';
-    }
-    try {
-        return new TextDecoder(encoding, {fatal: true}).decode(data);
-    } catch {
-        throw new Error(`Cannot decode netsh output as ${encoding}. Set WIFI_MAPPER_ENCODING to the actual encoding (for example ibm866 or windows-1251), or use networks --raw.`);
-    }
-}
+import type {NetworkObservation} from '../models/network.ts';
 
 export function parseNetworks(text: string): NetworkObservation[] {
     const observations: NetworkObservation[] = [];
     let ssid: string | undefined;
     let current: NetworkObservation | undefined;
 
+    function checkSSIDComplete() {
+        if (ssid !== undefined && !current) {
+            throw new Error('No BSSID records recognized for an SSID.');
+        }
+    }
+
     for (const line of text.replace(/^\uFEFF/, '').split(/\r?\n/)) {
         if (/^\s*(?:Interface name|Имя интерфейса)\s*:/i.test(line)) {
+            checkSSIDComplete();
             ssid = undefined;
             current = undefined;
         }
         const ssidMatch = /^\s*SSID\s+\d+\s*:[ \t]?(.*)$/i.exec(line);
         if (ssidMatch) {
+            checkSSIDComplete();
             ssid = ssidMatch[1] ?? '';
             current = undefined;
             continue;
@@ -69,7 +57,8 @@ export function parseNetworks(text: string): NetworkObservation[] {
         }
     }
 
-    if (observations.length === 0 && !/(?:There are\s+0\s+networks currently visible|Сейчас видно следующее количество сетей\s*:\s*0\s*\.)/i.test(text)) {
+    checkSSIDComplete();
+    if (observations.length === 0 && !/^\s*(?:There are\s+0\s+networks currently visible\.?|Сейчас видно следующее количество сетей\s*:\s*0\.?)\s*$/im.test(text)) {
         throw new Error('No BSSID records recognized. Only English and Russian netsh network output is supported.');
     }
     return observations;

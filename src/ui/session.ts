@@ -1,6 +1,6 @@
 import {cancel, confirm, intro, isCancel, log, outro, select} from '@clack/prompts';
 import chalk from 'chalk';
-import type {WifiCommand} from './netsh.ts';
+import type {WifiCommand} from '../collectors/netsh.ts';
 import {clearTerminal} from './terminal.ts';
 
 export type OutputMode = 'clean' | 'history';

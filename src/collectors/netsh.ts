@@ -46,7 +46,7 @@ export function runNetsh(command: WifiCommand): Promise<number> {
 
 export type NetshOutput = {exitCode: number; stdout: Buffer; stderr: Buffer};
 
-export function captureNetworks(): Promise<NetshOutput> {
+export function captureNetworks(signal?: AbortSignal): Promise<NetshOutput> {
     const executable = getNetshPath();
     return new Promise((resolve, reject) => {
         execFile(executable, commands.networks, {
@@ -54,6 +54,7 @@ export function captureNetworks(): Promise<NetshOutput> {
             windowsHide: true,
             timeout: 30_000,
             maxBuffer: 2 * 1024 * 1024,
+            ...(signal ? {signal} : {}),
         }, (error, stdout, stderr) => {
             if (error && (typeof error.code !== 'number' || error.killed || error.signal)) {
                 reject(error);

@@ -1,7 +1,7 @@
 import {EventEmitter} from 'node:events';
 import {join} from 'node:path';
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
-import {captureNetworks, runNetsh} from './netsh.ts';
+import {captureNetworks, runNetsh} from '../../../collectors/netsh.ts';
 
 const {spawnMock, execFileMock} = vi.hoisted(() => ({spawnMock: vi.fn(), execFileMock: vi.fn()}));
 

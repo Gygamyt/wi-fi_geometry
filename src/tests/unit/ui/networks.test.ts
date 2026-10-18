@@ -1,8 +1,8 @@
 import {beforeEach, describe, expect, it, vi} from 'vitest';
-import {captureNetworks} from './netsh.ts';
-import {showNetworks} from './networks.ts';
+import {captureNetworks} from '../../../collectors/netsh.ts';
+import {showNetworks} from '../../../ui/networks.ts';
 
-vi.mock('./netsh.ts', () => ({captureNetworks: vi.fn()}));
+vi.mock('../../../collectors/netsh.ts', () => ({captureNetworks: vi.fn()}));
 
 const example = 'SSID 1: Example\n BSSID 1: 02:00:00:00:00:01\n Signal: 0%\n Band: 5 GHz\n Channel: 44';
 

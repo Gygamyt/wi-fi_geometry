@@ -1,5 +1,5 @@
 import {afterEach, expect, it, vi} from 'vitest';
-import {clearTerminal} from './terminal.ts';
+import {clearTerminal} from '../../../ui/terminal.ts';
 
 const originalTTY = Object.getOwnPropertyDescriptor(process.stdout, 'isTTY');
 

@@ -1,12 +1,12 @@
 import chalk, {chalkStderr} from 'chalk';
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
-import {runNetsh} from './netsh.ts';
-import {runSession} from './session.ts';
-import {showNetworks} from './networks.ts';
+import {runNetsh} from '../../../collectors/netsh.ts';
+import {runSession} from '../../../ui/session.ts';
+import {showNetworks} from '../../../ui/networks.ts';
 
-vi.mock('./netsh.ts', () => ({runNetsh: vi.fn()}));
-vi.mock('./session.ts', () => ({runSession: vi.fn()}));
-vi.mock('./networks.ts', () => ({showNetworks: vi.fn()}));
+vi.mock('../../../collectors/netsh.ts', () => ({runNetsh: vi.fn()}));
+vi.mock('../../../ui/session.ts', () => ({runSession: vi.fn()}));
+vi.mock('../../../ui/networks.ts', () => ({showNetworks: vi.fn()}));
 
 const originalArgv = process.argv;
 const originalExitCode = process.exitCode;
@@ -17,7 +17,7 @@ const originalOutputTTY = Object.getOwnPropertyDescriptor(process.stdout, 'isTTY
 
 async function runCli(args: string[]) {
     process.argv = ['node', 'cli.ts', ...args];
-    await import('./cli.ts');
+    await import('../../../ui/cli.ts');
 }
 
 beforeEach(() => {

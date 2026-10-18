@@ -147,6 +147,8 @@ If error 5, Access denied or requires elevation persists, investigate the execut
 
 Run all three commands and inspect the fields and access restrictions on this laptop. Then review the output together and choose one field for the next small v0.1 change. Do not commit real SSIDs, BSSIDs or MAC addresses.
 
+Table and raw network output validation is recorded in [the v0.1 validation report](docs/validation-v0.1.md), including live Windows checks, automated coverage and remaining limits.
+
 ## References
 
 - [Microsoft: netsh wlan](https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/netsh-wlan)

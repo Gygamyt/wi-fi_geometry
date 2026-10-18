@@ -1,5 +1,6 @@
 import {describe, expect, it} from 'vitest';
-import {decodeNetshOutput, parseNetworks} from './network-parser.ts';
+import {decodeNetshOutput} from '../../../collectors/encoding.ts';
+import {parseNetworks} from '../../../parsers/network-parser.ts';
 
 // Synthetic Windows output: no real network names or device identifiers.
 const english = `Interface name : Test adapter
@@ -62,6 +63,15 @@ describe('parseNetworks', () => {
 
     it('resets context at an interface boundary', () => {
         expect(() => parseNetworks(`${english}Interface name: Another\nBSSID 1: 02:00:00:00:00:03`)).toThrow('Invalid BSSID');
+    });
+
+    it.each([
+        'SSID 1: There are 0 networks currently visible.',
+        `${english}SSID 2: Incomplete`,
+        `SSID 1: Incomplete\n${english}`,
+        'SSID 1: Incomplete\nInterface name: Another\nThere are 0 networks currently visible.',
+    ])('rejects incomplete SSIDs instead of silently showing a partial or empty result', (text) => {
+        expect(() => parseNetworks(text)).toThrow('No BSSID records recognized');
     });
 
     it.each(['-1%', '101%', 'unknown', '75 dBm'])('does not turn invalid signal quality into a measurement: %s', (value) => {
