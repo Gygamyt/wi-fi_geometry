@@ -21,7 +21,8 @@
 ## Implementation
 - TypeScript is the primary language. Rust may be introduced later for low-level collection.
 - Use npm only and commit `package-lock.json`. Do not use pnpm or Yarn or add their lockfiles.
-- JS/TS style: four spaces, single quotes, semicolons and no spaces inside import or object braces. `eslint.config.js` is the source of truth; use `npm run lint:fix` for fixes.
+- JS/TS style: four spaces, single quotes, semicolons and inner spaces in nonempty import/export, destructuring, object and object type braces, for example `import type { RecordingOptions } from './recording-options.ts'` and `{ written: number }`. `eslint.config.js` is the source of truth; use `npm run lint:fix` for fixes.
+- Trailing commas in multiline runtime objects are optional; other multiline comma-separated constructs retain required trailing commas. Preserve manually chosen object line breaks. Empty braces remain `{}`; array brackets remain compact.
 - Do not make Python mandatory without a concrete reason.
 - Add dependencies and abstraction layers only when currently needed.
 - Keep OS access separate from the CLI; introduce storage and analysis modules when those tasks arise.

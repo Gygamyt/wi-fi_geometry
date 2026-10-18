@@ -1,9 +1,9 @@
-import {cancel, confirm, intro, log, outro, select} from '@clack/prompts';
-import {beforeEach, describe, expect, it, vi} from 'vitest';
-import {runSession} from '../../../ui/session.ts';
-import {clearTerminal} from '../../../ui/terminal.ts';
+import { cancel, confirm, intro, log, outro, select } from '@clack/prompts';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { runSession } from '../../../ui/session.ts';
+import { clearTerminal } from '../../../ui/terminal.ts';
 
-vi.mock('../../../ui/terminal.ts', () => ({clearTerminal: vi.fn()}));
+vi.mock('../../../ui/terminal.ts', () => ({ clearTerminal: vi.fn() }));
 
 vi.mock('@clack/prompts', () => ({
     intro: vi.fn(),
@@ -12,7 +12,7 @@ vi.mock('@clack/prompts', () => ({
     select: vi.fn(),
     confirm: vi.fn(),
     isCancel: (value: unknown) => typeof value === 'symbol',
-    log: {info: vi.fn(), step: vi.fn(), success: vi.fn(), warn: vi.fn()},
+    log: { info: vi.fn(), step: vi.fn(), success: vi.fn(), warn: vi.fn() },
 }));
 
 beforeEach(() => {
@@ -28,11 +28,11 @@ describe('interactive session', () => {
         expect(intro).toHaveBeenCalledOnce();
         expect(select).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({
             options: [
-                expect.objectContaining({value: 'drivers'}),
-                expect.objectContaining({value: 'interfaces'}),
-                expect.objectContaining({value: 'networks'}),
-                expect.objectContaining({value: 'toggle-output'}),
-                expect.objectContaining({value: 'exit'}),
+                expect.objectContaining({ value: 'drivers' }),
+                expect.objectContaining({ value: 'interfaces' }),
+                expect.objectContaining({ value: 'networks' }),
+                expect.objectContaining({ value: 'toggle-output' }),
+                expect.objectContaining({ value: 'exit' }),
             ],
         }));
         expect(execute).not.toHaveBeenCalled();
@@ -112,7 +112,7 @@ describe('interactive session', () => {
         await runSession(vi.fn(), 'history');
         expect(clearTerminal).toHaveBeenCalledOnce();
         expect(select).toHaveBeenLastCalledWith(expect.objectContaining({
-            options: expect.arrayContaining([expect.objectContaining({value: 'toggle-output', label: 'Output mode: clean'})]),
+            options: expect.arrayContaining([expect.objectContaining({ value: 'toggle-output', label: 'Output mode: clean' })]),
         }));
     });
 

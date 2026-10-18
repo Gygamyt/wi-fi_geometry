@@ -1,17 +1,17 @@
-import {EventEmitter} from 'node:events';
-import {join} from 'node:path';
-import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
-import {captureNetworks, runNetsh} from '../../../collectors/netsh.ts';
+import { EventEmitter } from 'node:events';
+import { join } from 'node:path';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { captureNetworks, runNetsh } from '../../../collectors/netsh.ts';
 
-const {spawnMock, execFileMock} = vi.hoisted(() => ({spawnMock: vi.fn(), execFileMock: vi.fn()}));
+const { spawnMock, execFileMock } = vi.hoisted(() => ({ spawnMock: vi.fn(), execFileMock: vi.fn() }));
 
-vi.mock('node:child_process', () => ({spawn: spawnMock, execFile: execFileMock}));
+vi.mock('node:child_process', () => ({ spawn: spawnMock, execFile: execFileMock }));
 
 const originalPlatform = Object.getOwnPropertyDescriptor(process, 'platform')!;
 let child: EventEmitter;
 
 beforeEach(() => {
-    Object.defineProperty(process, 'platform', {value: 'win32', configurable: true});
+    Object.defineProperty(process, 'platform', { value: 'win32', configurable: true });
     vi.stubEnv('SystemRoot', 'C:\\TestWindows');
     child = new EventEmitter();
     spawnMock.mockReturnValue(child);
@@ -22,22 +22,22 @@ describe('captureNetworks', () => {
         const stdout = Buffer.from('Synthetic output');
         const stderr = Buffer.from('Synthetic diagnostic');
         execFileMock.mockImplementation((_path, _args, _options, callback) => callback(null, stdout, stderr));
-        await expect(captureNetworks()).resolves.toEqual({exitCode: 0, stdout, stderr});
+        await expect(captureNetworks()).resolves.toEqual({ exitCode: 0, stdout, stderr });
         expect(execFileMock).toHaveBeenCalledExactlyOnceWith(
             join('C:\\TestWindows', 'System32', 'netsh.exe'),
             ['wlan', 'show', 'networks', 'mode=bssid'],
-            {encoding: 'buffer', windowsHide: true, timeout: 30_000, maxBuffer: 2 * 1024 * 1024},
+            { encoding: 'buffer', windowsHide: true, timeout: 30_000, maxBuffer: 2 * 1024 * 1024 },
             expect.any(Function),
         );
     });
 
     it('retains output and numeric exit codes on Windows command failure', async () => {
         const stdout = Buffer.from('Windows error');
-        execFileMock.mockImplementation((_path, _args, _options, callback) => callback({code: 5}, stdout, Buffer.alloc(0)));
-        await expect(captureNetworks()).resolves.toEqual({exitCode: 5, stdout, stderr: Buffer.alloc(0)});
+        execFileMock.mockImplementation((_path, _args, _options, callback) => callback({ code: 5 }, stdout, Buffer.alloc(0)));
+        await expect(captureNetworks()).resolves.toEqual({ exitCode: 5, stdout, stderr: Buffer.alloc(0) });
     });
 
-    it.each([{code: 'ENOENT'}, {code: 1, killed: true}, {code: 1, signal: 'SIGTERM'}, {code: 'ERR_CHILD_PROCESS_STDIO_MAXBUFFER'}])('rejects process errors instead of parsing partial output: %j', async (error) => {
+    it.each([{ code: 'ENOENT' }, { code: 1, killed: true }, { code: 1, signal: 'SIGTERM' }, { code: 'ERR_CHILD_PROCESS_STDIO_MAXBUFFER' }])('rejects process errors instead of parsing partial output: %j', async (error) => {
         execFileMock.mockImplementation((_path, _args, _options, callback) => callback(error, Buffer.alloc(0), Buffer.alloc(0)));
         await expect(captureNetworks()).rejects.toBe(error);
     });
@@ -58,7 +58,7 @@ describe('runNetsh', () => {
         expect(spawnMock).toHaveBeenCalledExactlyOnceWith(
             join('C:\\TestWindows', 'System32', 'netsh.exe'),
             args,
-            {stdio: 'inherit', shell: false, windowsHide: true, timeout: 30_000},
+            { stdio: 'inherit', shell: false, windowsHide: true, timeout: 30_000 },
         );
 
         child.emit('close', 0, null);
@@ -98,7 +98,7 @@ describe('runNetsh', () => {
     });
 
     it('rejects non-Windows execution before calling the OS', () => {
-        Object.defineProperty(process, 'platform', {value: 'linux', configurable: true});
+        Object.defineProperty(process, 'platform', { value: 'linux', configurable: true });
         expect(() => runNetsh('networks')).toThrow('requires Windows');
         expect(spawnMock).not.toHaveBeenCalled();
     });

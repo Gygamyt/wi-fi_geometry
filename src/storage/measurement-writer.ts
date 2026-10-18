@@ -1,9 +1,9 @@
-import {mkdir, open} from 'node:fs/promises';
-import {dirname} from 'node:path';
-import type {Measurement} from '../models/measurement.ts';
+import { mkdir, open } from 'node:fs/promises';
+import { dirname } from 'node:path';
+import type { Measurement } from '../models/measurement.ts';
 
 export async function openMeasurementWriter(path: string) {
-    await mkdir(dirname(path), {recursive: true});
+    await mkdir(dirname(path), { recursive: true });
     // Never overwrite an earlier experiment.
     const file = await open(path, 'wx');
     return {

@@ -89,7 +89,7 @@ npm run test:run
 
 - `typecheck` checks types without generating JavaScript.
 - `lint` checks JS/TS code and formatting.
-- `lint:fix` applies available fixes using the style in `src/cli.ts`: four spaces, single quotes, semicolons and no spaces inside braces.
+- `lint:fix` applies available fixes: four spaces, single quotes, semicolons, and inner spaces in import/export, destructuring, object and object type braces (`import { name } from 'module'`, `{ written: number }`). Empty braces stay `{}` and array brackets remain compact. Trailing commas in multiline runtime objects are optional.
 - `test` runs Vitest in watch mode and reruns related tests after changes. Press `q` or Ctrl+C to exit.
 - `test:run` runs the tests once and exits.
 

@@ -1,4 +1,4 @@
-import type {NetworkObservation} from './network.ts';
+import type { NetworkObservation } from './network.ts';
 
 export type Measurement = {
     schemaVersion: 1;
@@ -11,5 +11,5 @@ export type Measurement = {
     observation: NetworkObservation | null;
     exitCode: number | null;
     error: string | null;
-    raw: {stdoutBase64: string; stderrBase64: string};
+    raw: { stdoutBase64: string; stderrBase64: string };
 };

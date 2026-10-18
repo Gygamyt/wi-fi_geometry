@@ -1,5 +1,5 @@
-import {execFile, spawn} from 'node:child_process';
-import {join} from 'node:path';
+import { execFile, spawn } from 'node:child_process';
+import { join } from 'node:path';
 
 const commands = {
     drivers: ['wlan', 'show', 'drivers'],
@@ -44,7 +44,7 @@ export function runNetsh(command: WifiCommand): Promise<number> {
     });
 }
 
-export type NetshOutput = {exitCode: number; stdout: Buffer; stderr: Buffer};
+export type NetshOutput = { exitCode: number; stdout: Buffer; stderr: Buffer };
 
 export function captureNetworks(signal?: AbortSignal): Promise<NetshOutput> {
     const executable = getNetshPath();
@@ -54,13 +54,13 @@ export function captureNetworks(signal?: AbortSignal): Promise<NetshOutput> {
             windowsHide: true,
             timeout: 30_000,
             maxBuffer: 2 * 1024 * 1024,
-            ...(signal ? {signal} : {}),
+            ...(signal ? { signal } : {}),
         }, (error, stdout, stderr) => {
             if (error && (typeof error.code !== 'number' || error.killed || error.signal)) {
                 reject(error);
                 return;
             }
-            resolve({exitCode: typeof error?.code === 'number' ? error.code : 0, stdout, stderr});
+            resolve({ exitCode: typeof error?.code === 'number' ? error.code : 0, stdout, stderr });
         });
     });
 }

@@ -1,5 +1,5 @@
-import {randomUUID} from 'node:crypto';
-import {join} from 'node:path';
+import { randomUUID } from 'node:crypto';
+import { join } from 'node:path';
 
 export type RecordingOptions = {
     bssid: string;
@@ -36,5 +36,5 @@ export function parseRecordingOptions(args: string[]): RecordingOptions {
     if (outputPath.includes('\0')) {
         throw new Error('--output must be a valid file path.');
     }
-    return {bssid: bssid.toLowerCase(), count, intervalMs, outputPath};
+    return { bssid: bssid.toLowerCase(), count, intervalMs, outputPath };
 }

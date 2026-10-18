@@ -1,9 +1,9 @@
-import chalk, {chalkStderr} from 'chalk';
-import {runNetsh} from '../collectors/netsh.ts';
-import type {WifiCommand} from '../collectors/netsh.ts';
-import {runSession} from './session.ts';
-import {showNetworks} from './networks.ts';
-import {runRecording} from './record.ts';
+import chalk, { chalkStderr } from 'chalk';
+import { runNetsh } from '../collectors/netsh.ts';
+import type { WifiCommand } from '../collectors/netsh.ts';
+import { runSession } from './session.ts';
+import { showNetworks } from './networks.ts';
+import { runRecording } from './record.ts';
 
 const help = `${chalk.bold.cyan('Wi-Fi Mapper')} — v0.2
 

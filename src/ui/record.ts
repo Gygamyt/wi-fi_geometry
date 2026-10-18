@@ -1,6 +1,6 @@
-import chalk, {chalkStderr} from 'chalk';
-import {parseRecordingOptions} from '../services/recording-options.ts';
-import {recordMeasurements} from '../services/record-measurements.ts';
+import chalk, { chalkStderr } from 'chalk';
+import { parseRecordingOptions } from '../services/recording-options.ts';
+import { recordMeasurements } from '../services/record-measurements.ts';
 
 export async function runRecording(args: string[]): Promise<number> {
     let options;

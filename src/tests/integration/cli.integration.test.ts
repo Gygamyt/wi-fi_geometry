@@ -1,10 +1,10 @@
-import {EventEmitter} from 'node:events';
-import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
+import { EventEmitter } from 'node:events';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-const {spawnMock, execFileMock, writeMock, closeMock} = vi.hoisted(() => ({spawnMock: vi.fn(), execFileMock: vi.fn(), writeMock: vi.fn(), closeMock: vi.fn()}));
-vi.mock('node:child_process', () => ({spawn: spawnMock, execFile: execFileMock}));
+const { spawnMock, execFileMock, writeMock, closeMock } = vi.hoisted(() => ({ spawnMock: vi.fn(), execFileMock: vi.fn(), writeMock: vi.fn(), closeMock: vi.fn() }));
+vi.mock('node:child_process', () => ({ spawn: spawnMock, execFile: execFileMock }));
 vi.mock('../../storage/measurement-writer.ts', () => ({
-    openMeasurementWriter: async () => ({write: writeMock, close: closeMock}),
+    openMeasurementWriter: async () => ({ write: writeMock, close: closeMock }),
 }));
 
 // Synthetic records exercise the full CLI-to-parser path without real Wi-Fi.
@@ -34,7 +34,7 @@ const originalPlatform = Object.getOwnPropertyDescriptor(process, 'platform')!;
 
 beforeEach(() => {
     vi.resetModules();
-    Object.defineProperty(process, 'platform', {value: 'win32', configurable: true});
+    Object.defineProperty(process, 'platform', { value: 'win32', configurable: true });
     process.exitCode = undefined;
     vi.stubEnv('SystemRoot', 'C:\\TestWindows');
     vi.stubEnv('WIFI_MAPPER_ENCODING', 'utf-8');
@@ -70,8 +70,8 @@ describe('CLI network integration', () => {
         expect(process.exitCode).toBe(0);
         expect(writeMock).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({
             schemaVersion: 1, source: 'netsh', sampleIndex: 1, targetBssid: '02:00:00:00:00:01', status: 'observed',
-            observation: expect.objectContaining({ssid: 'Example', signalQualityPercent: 78}),
-            raw: {stdoutBase64: output.toString('base64'), stderrBase64: ''},
+            observation: expect.objectContaining({ ssid: 'Example', signalQualityPercent: 78 }),
+            raw: { stdoutBase64: output.toString('base64'), stderrBase64: '' },
         }));
         expect(closeMock).toHaveBeenCalledOnce();
     });
@@ -79,9 +79,9 @@ describe('CLI network integration', () => {
     it('collects, decodes and displays every BSSID including a hidden name', async () => {
         await runCli(['networks']);
         expect(console.table).toHaveBeenCalledExactlyOnceWith([
-            {SSID: 'Example', BSSID: '02:00:00:00:00:01', Signal: '78%', Band: '2.4 GHz', Channel: 3, Radio: '802.11ax'},
-            {SSID: 'Example', BSSID: '02:00:00:00:00:02', Signal: '81%', Band: '5 GHz', Channel: 44, Radio: '802.11ax'},
-            {SSID: '(hidden)', BSSID: '02:00:00:00:00:03', Signal: '81%', Band: '5 GHz', Channel: 44, Radio: '802.11ax'},
+            { SSID: 'Example', BSSID: '02:00:00:00:00:01', Signal: '78%', Band: '2.4 GHz', Channel: 3, Radio: '802.11ax' },
+            { SSID: 'Example', BSSID: '02:00:00:00:00:02', Signal: '81%', Band: '5 GHz', Channel: 44, Radio: '802.11ax' },
+            { SSID: '(hidden)', BSSID: '02:00:00:00:00:03', Signal: '81%', Band: '5 GHz', Channel: 44, Radio: '802.11ax' },
         ]);
         expect(spawnMock).not.toHaveBeenCalled();
         expect(process.exitCode).toBe(0);
@@ -91,7 +91,7 @@ describe('CLI network integration', () => {
     it('uses inherited streams without decoding in raw mode, even with an invalid encoding override', async () => {
         vi.stubEnv('WIFI_MAPPER_ENCODING', 'invalid-encoding');
         await runCli(['networks', '--raw']);
-        expect(spawnMock).toHaveBeenCalledWith(expect.any(String), ['wlan', 'show', 'networks', 'mode=bssid'], expect.objectContaining({stdio: 'inherit', shell: false}));
+        expect(spawnMock).toHaveBeenCalledWith(expect.any(String), ['wlan', 'show', 'networks', 'mode=bssid'], expect.objectContaining({ stdio: 'inherit', shell: false }));
         expect(execFileMock).not.toHaveBeenCalled();
         expect(console.table).not.toHaveBeenCalled();
         expect(process.exitCode).toBe(0);
@@ -99,7 +99,7 @@ describe('CLI network integration', () => {
 
     it.each([['networks'], ['networks', '--raw']])('preserves Windows failures through %j', async (...args) => {
         const windowsError = Buffer.from('Synthetic Windows error');
-        execFileMock.mockImplementation((_file, _args, _options, callback) => callback({code: 5}, windowsError, Buffer.alloc(0)));
+        execFileMock.mockImplementation((_file, _args, _options, callback) => callback({ code: 5 }, windowsError, Buffer.alloc(0)));
         spawnMock.mockImplementation(() => {
             const child = new EventEmitter();
             queueMicrotask(() => child.emit('close', 5, null));

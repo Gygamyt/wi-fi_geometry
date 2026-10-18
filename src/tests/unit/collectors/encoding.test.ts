@@ -1,5 +1,5 @@
-import {describe, expect, it} from 'vitest';
-import {decodeNetshOutput} from '../../../collectors/encoding.ts';
+import { describe, expect, it } from 'vitest';
+import { decodeNetshOutput } from '../../../collectors/encoding.ts';
 
 describe('decodeNetshOutput', () => {
     it('decodes UTF-8 without losing non-ASCII names', () => {

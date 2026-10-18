@@ -1,4 +1,4 @@
-import type {NetworkObservation} from '../models/network.ts';
+import type { NetworkObservation } from '../models/network.ts';
 
 export function parseNetworks(text: string): NetworkObservation[] {
     const observations: NetworkObservation[] = [];
@@ -30,7 +30,7 @@ export function parseNetworks(text: string): NetworkObservation[] {
             if (ssid === undefined || !/^(?:[\da-f]{2}:){5}[\da-f]{2}$/i.test(bssid)) {
                 throw new Error('Invalid BSSID record in netsh output.');
             }
-            current = {ssid, bssid: bssid.toLowerCase(), signalQualityPercent: null, bandGHz: null, channel: null, radioType: null};
+            current = { ssid, bssid: bssid.toLowerCase(), signalQualityPercent: null, bandGHz: null, channel: null, radioType: null };
             observations.push(current);
             continue;
         }

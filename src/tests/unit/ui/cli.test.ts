@@ -1,14 +1,14 @@
-import chalk, {chalkStderr} from 'chalk';
-import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
-import {runNetsh} from '../../../collectors/netsh.ts';
-import {runSession} from '../../../ui/session.ts';
-import {showNetworks} from '../../../ui/networks.ts';
-import {runRecording} from '../../../ui/record.ts';
+import chalk, { chalkStderr } from 'chalk';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { runNetsh } from '../../../collectors/netsh.ts';
+import { runSession } from '../../../ui/session.ts';
+import { showNetworks } from '../../../ui/networks.ts';
+import { runRecording } from '../../../ui/record.ts';
 
-vi.mock('../../../collectors/netsh.ts', () => ({runNetsh: vi.fn()}));
-vi.mock('../../../ui/session.ts', () => ({runSession: vi.fn()}));
-vi.mock('../../../ui/networks.ts', () => ({showNetworks: vi.fn()}));
-vi.mock('../../../ui/record.ts', () => ({runRecording: vi.fn()}));
+vi.mock('../../../collectors/netsh.ts', () => ({ runNetsh: vi.fn() }));
+vi.mock('../../../ui/session.ts', () => ({ runSession: vi.fn() }));
+vi.mock('../../../ui/networks.ts', () => ({ showNetworks: vi.fn() }));
+vi.mock('../../../ui/record.ts', () => ({ runRecording: vi.fn() }));
 
 const originalArgv = process.argv;
 const originalExitCode = process.exitCode;
@@ -25,8 +25,8 @@ async function runCli(args: string[]) {
 beforeEach(() => {
     vi.resetModules();
     process.exitCode = undefined;
-    Object.defineProperty(process.stdin, 'isTTY', {value: true, configurable: true});
-    Object.defineProperty(process.stdout, 'isTTY', {value: true, configurable: true});
+    Object.defineProperty(process.stdin, 'isTTY', { value: true, configurable: true });
+    Object.defineProperty(process.stdout, 'isTTY', { value: true, configurable: true });
     chalk.level = 0;
     chalkStderr.level = 0;
     vi.mocked(runNetsh).mockResolvedValue(0);
@@ -90,7 +90,7 @@ describe('CLI', () => {
     });
 
     it.each(['input', 'output'])('does not open the menu without a TTY for %s', async (stream) => {
-        Object.defineProperty(stream === 'input' ? process.stdin : process.stdout, 'isTTY', {value: false, configurable: true});
+        Object.defineProperty(stream === 'input' ? process.stdin : process.stdout, 'isTTY', { value: false, configurable: true });
         await runCli([]);
         expect(runSession).not.toHaveBeenCalled();
         expect(runNetsh).not.toHaveBeenCalled();

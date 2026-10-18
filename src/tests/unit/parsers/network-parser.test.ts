@@ -1,5 +1,5 @@
-import {describe, expect, it} from 'vitest';
-import {parseNetworks} from '../../../parsers/network-parser.ts';
+import { describe, expect, it } from 'vitest';
+import { parseNetworks } from '../../../parsers/network-parser.ts';
 
 // Synthetic Windows output: no real network names or device identifiers.
 const english = `Interface name : Test adapter
@@ -22,8 +22,8 @@ SSID 1 : Lab: Example
 describe('parseNetworks', () => {
     it('creates one observation per BSSID and retains the shared SSID', () => {
         expect(parseNetworks(english)).toEqual([
-            {ssid: 'Lab: Example', bssid: '02:00:00:00:00:01', signalQualityPercent: 75, radioType: '802.11ax', bandGHz: 2.4, channel: 3},
-            {ssid: 'Lab: Example', bssid: '02:00:00:00:00:02', signalQualityPercent: 0, radioType: '802.11ac', bandGHz: 5, channel: 44},
+            { ssid: 'Lab: Example', bssid: '02:00:00:00:00:01', signalQualityPercent: 75, radioType: '802.11ax', bandGHz: 2.4, channel: 3 },
+            { ssid: 'Lab: Example', bssid: '02:00:00:00:00:02', signalQualityPercent: 0, radioType: '802.11ac', bandGHz: 5, channel: 44 },
         ]);
     });
 
@@ -31,21 +31,21 @@ describe('parseNetworks', () => {
         const text = ['Имя интерфейса: Test adapter', 'SSID 1: Example', ' BSSID 1 : 02:00:00:00:AA:01',
             ' Сигнал : 100%', ' Тип радио : 802.11ax', ' Диапазон : 2,4\u00a0ГГц', ' Канал : 6'].join('\r\n');
         expect(parseNetworks(text)).toEqual([
-            {ssid: 'Example', bssid: '02:00:00:00:aa:01', signalQualityPercent: 100, radioType: '802.11ax', bandGHz: 2.4, channel: 6},
+            { ssid: 'Example', bssid: '02:00:00:00:aa:01', signalQualityPercent: 100, radioType: '802.11ax', bandGHz: 2.4, channel: 6 },
         ]);
     });
 
     it('preserves hidden names, colon-prefixed names and missing measurements', () => {
         expect(parseNetworks('SSID 1: :example\n BSSID 1: 02:00:00:00:00:01\nSSID 2:\n BSSID 1: 02:00:00:00:00:02'))
             .toEqual([
-                {ssid: ':example', bssid: '02:00:00:00:00:01', signalQualityPercent: null, bandGHz: null, channel: null, radioType: null},
-                {ssid: '', bssid: '02:00:00:00:00:02', signalQualityPercent: null, bandGHz: null, channel: null, radioType: null},
+                { ssid: ':example', bssid: '02:00:00:00:00:01', signalQualityPercent: null, bandGHz: null, channel: null, radioType: null },
+                { ssid: '', bssid: '02:00:00:00:00:02', signalQualityPercent: null, bandGHz: null, channel: null, radioType: null },
             ]);
     });
 
     it('does not carry fields into another BSSID or SSID', () => {
         const observations = parseNetworks(`${english}SSID 2: Another\n BSSID 1: 02:00:00:00:00:03`);
-        expect(observations[2]).toEqual({ssid: 'Another', bssid: '02:00:00:00:00:03', signalQualityPercent: null, bandGHz: null, channel: null, radioType: null});
+        expect(observations[2]).toEqual({ ssid: 'Another', bssid: '02:00:00:00:00:03', signalQualityPercent: null, bandGHz: null, channel: null, radioType: null });
     });
 
     it.each(['There are 0 networks currently visible.', 'Сейчас видно следующее количество сетей: 0.'])('recognizes an explicitly empty result: %s', (text) => {

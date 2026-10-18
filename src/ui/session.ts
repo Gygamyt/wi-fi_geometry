@@ -1,7 +1,7 @@
-import {cancel, confirm, intro, isCancel, log, outro, select} from '@clack/prompts';
+import { cancel, confirm, intro, isCancel, log, outro, select } from '@clack/prompts';
 import chalk from 'chalk';
-import type {WifiCommand} from '../collectors/netsh.ts';
-import {clearTerminal} from './terminal.ts';
+import type { WifiCommand } from '../collectors/netsh.ts';
+import { clearTerminal } from './terminal.ts';
 
 export type OutputMode = 'clean' | 'history';
 
@@ -32,11 +32,11 @@ export async function runSession(
         const command = await select<WifiCommand | 'exit' | 'toggle-output'>({
             message: 'What would you like to inspect?',
             options: [
-                {value: 'drivers', label: 'Wi-Fi adapter', hint: 'driver, standards and bands'},
-                {value: 'interfaces', label: 'Current connection', hint: 'interface and connection status'},
-                {value: 'networks', label: 'Available networks', hint: 'table: SSID, BSSID, signal and channels'},
-                {value: 'toggle-output', label: `Output mode: ${mode}`, hint: `switch to ${mode === 'clean' ? 'history' : 'clean'}`},
-                {value: 'exit', label: 'Exit'},
+                { value: 'drivers', label: 'Wi-Fi adapter', hint: 'driver, standards and bands' },
+                { value: 'interfaces', label: 'Current connection', hint: 'interface and connection status' },
+                { value: 'networks', label: 'Available networks', hint: 'table: SSID, BSSID, signal and channels' },
+                { value: 'toggle-output', label: `Output mode: ${mode}`, hint: `switch to ${mode === 'clean' ? 'history' : 'clean'}` },
+                { value: 'exit', label: 'Exit' },
             ],
         });
 

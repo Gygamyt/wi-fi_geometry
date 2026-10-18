@@ -5,7 +5,7 @@ export function decodeNetshOutput(data: Buffer, encoding = process.env.WIFI_MAPP
         encoding = 'utf-16be';
     }
     try {
-        return new TextDecoder(encoding, {fatal: true}).decode(data);
+        return new TextDecoder(encoding, { fatal: true }).decode(data);
     } catch {
         throw new Error(`Cannot decode netsh output as ${encoding}. Set WIFI_MAPPER_ENCODING to the actual encoding (for example ibm866 or windows-1251), or use networks --raw.`);
     }
