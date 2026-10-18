@@ -26,6 +26,7 @@
 - Keep OS access separate from the CLI; introduce storage and analysis modules when those tasks arise.
 - Allow a future switch from netsh to Native Wi-Fi API without building a universal framework in advance.
 - Account for netsh output localization and encoding; it is not a stable machine-readable format.
+- Network parsing supports English and Russian OS labels; synthetic fixtures may contain those original labels. Keep missing measurements as null, empty SSIDs as empty strings, and provide raw output on request. Do not infer encoding from chcp; decode strictly and use WIFI_MAPPER_ENCODING for explicit overrides.
 - Add colocated Vitest unit tests (`*.test.ts`) for new or changed logic, covering successful behavior, errors and edge cases.
 - Use `npm test` in watch mode during development. Mock OS calls in unit tests: do not run real netsh or depend on Wi-Fi hardware, Windows permissions or local measurements.
 
@@ -47,5 +48,5 @@
 - Type checking: `npm run typecheck` after installing devDependencies.
 - Install with `npm ci` when the lockfile exists; use `npm install` after dependency changes.
 - Before completing JS/TS changes, run `npm run lint`, `npm run typecheck` and `npm run test:run`.
-- Commands: `drivers`, `interfaces`, `networks`.
+- Commands: `drivers`, `interfaces`, `networks` (table), `networks --raw` (original output).
 - Use read-only `netsh wlan show` commands. Do not change OS settings or permissions automatically.

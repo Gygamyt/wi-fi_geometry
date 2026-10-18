@@ -2,9 +2,11 @@ import chalk, {chalkStderr} from 'chalk';
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
 import {runNetsh} from './netsh.ts';
 import {runSession} from './session.ts';
+import {showNetworks} from './networks.ts';
 
 vi.mock('./netsh.ts', () => ({runNetsh: vi.fn()}));
 vi.mock('./session.ts', () => ({runSession: vi.fn()}));
+vi.mock('./networks.ts', () => ({showNetworks: vi.fn()}));
 
 const originalArgv = process.argv;
 const originalExitCode = process.exitCode;
@@ -26,6 +28,7 @@ beforeEach(() => {
     chalk.level = 0;
     chalkStderr.level = 0;
     vi.mocked(runNetsh).mockResolvedValue(0);
+    vi.mocked(showNetworks).mockResolvedValue(0);
     vi.spyOn(console, 'log').mockImplementation(() => {});
     vi.spyOn(console, 'error').mockImplementation(() => {});
 });
@@ -93,13 +96,12 @@ describe('CLI', () => {
     });
 
     it('executes session actions and exits successfully after a command failure', async () => {
-        vi.mocked(runNetsh).mockResolvedValue(5);
+        vi.mocked(showNetworks).mockResolvedValue(5);
         vi.mocked(runSession).mockImplementation(async (execute) => {
             expect(await execute('networks')).toBe(5);
         });
         await runCli([]);
-        expect(runNetsh).toHaveBeenCalledExactlyOnceWith('networks');
-        expect(console.error).toHaveBeenCalledWith(expect.stringContaining('code 5'));
+        expect(showNetworks).toHaveBeenCalledOnce();
         expect(process.exitCode).toBe(0);
     });
 
@@ -110,12 +112,32 @@ describe('CLI', () => {
         expect(console.error).toHaveBeenCalledWith('Terminal unavailable');
     });
 
-    it.each(['drivers', 'interfaces', 'networks'])('executes command %s', async (command) => {
+    it.each(['drivers', 'interfaces'])('executes command %s', async (command) => {
         await runCli([command]);
         expect(runNetsh).toHaveBeenCalledExactlyOnceWith(command);
         expect(console.error).not.toHaveBeenCalled();
         expect(process.exitCode).toBe(0);
         expect(runSession).not.toHaveBeenCalled();
+    });
+
+    it('shows the network table by default', async () => {
+        await runCli(['networks']);
+        expect(showNetworks).toHaveBeenCalledOnce();
+        expect(runNetsh).not.toHaveBeenCalled();
+        expect(process.exitCode).toBe(0);
+    });
+
+    it('preserves raw network output on request', async () => {
+        await runCli(['networks', '--raw']);
+        expect(runNetsh).toHaveBeenCalledExactlyOnceWith('networks');
+        expect(showNetworks).not.toHaveBeenCalled();
+        expect(process.exitCode).toBe(0);
+    });
+
+    it('preserves a network collection failure code', async () => {
+        vi.mocked(showNetworks).mockResolvedValue(5);
+        await runCli(['networks']);
+        expect(process.exitCode).toBe(5);
     });
 
     it.each([
@@ -134,7 +156,7 @@ describe('CLI', () => {
 
     it('forwards the netsh error code and prints an explanation', async () => {
         vi.mocked(runNetsh).mockResolvedValue(5);
-        await runCli(['networks']);
+        await runCli(['drivers']);
         expect(process.exitCode).toBe(5);
         expect(console.error).toHaveBeenCalledWith(expect.stringContaining('code 5'));
     });
@@ -144,7 +166,7 @@ describe('CLI', () => {
         ['Unknown error', 'Unknown error'],
     ])('handles exception %s', async (error, message) => {
         vi.mocked(runNetsh).mockRejectedValue(error);
-        await runCli(['networks']);
+        await runCli(['drivers']);
         expect(process.exitCode).toBe(1);
         expect(console.error).toHaveBeenCalledWith(message);
     });

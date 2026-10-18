@@ -2,8 +2,9 @@ import chalk, {chalkStderr} from 'chalk';
 import {runNetsh} from './netsh.ts';
 import type {WifiCommand} from './netsh.ts';
 import {runSession} from './session.ts';
+import {showNetworks} from './networks.ts';
 
-const help = `${chalk.bold.cyan('Wi-Fi Mapper')} — v0.1, raw netsh output
+const help = `${chalk.bold.cyan('Wi-Fi Mapper')} — v0.1
 
 Usage: npm run start — interactive session
         node src/cli.ts <command> — single command
@@ -11,18 +12,22 @@ Usage: npm run start — interactive session
   drivers      Adapter, driver, supported standards and bands
   interfaces   Adapter and current connection status
   networks     Visible networks with BSSID details
+  networks --raw  Original netsh output without parsing
   --help       Help
   --clean      Interactive session with one result at a time (default)
   --history    Interactive session preserving previous output
 
-Windows data and messages are displayed without parsing or conversion.
+Networks are shown as a table. Other commands and --raw preserve Windows output.
 `;
 
 const args = process.argv.slice(2);
 const command = args[0];
 
-async function executeCommand(command: WifiCommand): Promise<number> {
+async function executeCommand(command: WifiCommand, raw = false): Promise<number> {
     try {
+        if (command === 'networks' && !raw) {
+            return await showNetworks();
+        }
         const exitCode = await runNetsh(command);
         if (exitCode !== 0) {
             console.error(chalkStderr.red(`netsh exited with code ${exitCode}. See the Windows message above for details.`));
@@ -40,7 +45,7 @@ if (args.length === 0 || (args.length === 1 && (command === '--clean' || command
         process.exitCode = 2;
     } else {
         try {
-            await runSession(executeCommand, command === '--history' ? 'history' : 'clean');
+            await runSession((selected) => executeCommand(selected), command === '--history' ? 'history' : 'clean');
             process.exitCode = 0;
         } catch (error) {
             console.error(chalkStderr.red(error instanceof Error ? error.message : String(error)));
@@ -49,6 +54,8 @@ if (args.length === 0 || (args.length === 1 && (command === '--clean' || command
     }
 } else if (args.length === 1 && (command === '--help' || command === '-h')) {
     console.log(help);
+} else if (args.length === 2 && command === 'networks' && args[1] === '--raw') {
+    process.exitCode = await executeCommand('networks', true);
 } else if (
     args.length !== 1 ||
     (command !== 'drivers' && command !== 'interfaces' && command !== 'networks')

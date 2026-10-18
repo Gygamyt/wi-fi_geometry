@@ -34,7 +34,7 @@ export async function runSession(
             options: [
                 {value: 'drivers', label: 'Wi-Fi adapter', hint: 'driver, standards and bands'},
                 {value: 'interfaces', label: 'Current connection', hint: 'interface and connection status'},
-                {value: 'networks', label: 'Available networks', hint: 'SSID, BSSID, signal and channels'},
+                {value: 'networks', label: 'Available networks', hint: 'table: SSID, BSSID, signal and channels'},
                 {value: 'toggle-output', label: `Output mode: ${mode}`, hint: `switch to ${mode === 'clean' ? 'history' : 'clean'}`},
                 {value: 'exit', label: 'Exit'},
             ],
@@ -69,7 +69,7 @@ export async function runSession(
         if (exitCode === 0) {
             log.success('Command completed.');
         } else {
-            log.warn('Could not retrieve data. Check the Windows message above or choose another action.');
+            log.warn('Could not complete the command. Check the details above or choose another action.');
         }
 
         if (mode === 'clean') {

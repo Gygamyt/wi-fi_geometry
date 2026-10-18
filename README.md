@@ -1,6 +1,6 @@
 # Wi-Fi Mapper
 
-A research pet project exploring the Wi-Fi data available on Windows with a laptop's built-in adapter. The current scope is the first step of v0.1: inspecting raw OS output. Measurement history, analysis, Rust and graphical interfaces are future work.
+A research pet project exploring the Wi-Fi data available on Windows with a laptop's built-in adapter. The current v0.1 collects netsh output and displays network observations in a table. Measurement history, analysis, Rust and graphical interfaces are future work.
 
 ## Getting started
 
@@ -19,7 +19,7 @@ npm run start -- --history  # Preserve previous results in the terminal
 
 In **clean** mode, the screen is cleared before each menu and result. Results stay visible until you confirm **Back to menu**; you can also choose **Exit**. In **history** mode, commands append their output and return directly to the menu. The **Output mode** menu item switches modes during the session; the choice lasts until exit. Use a startup flag to select the mode for the next session. Clearing depends on the terminal's support and is not a secure deletion of terminal logs.
 
-Results have a separate heading and terminal-width separators. The body remains raw Windows output, including its spacing and language; field alignment requires a future parser.
+Results have a separate heading and terminal-width separators. Available networks are parsed into an English table with one row per BSSID. Driver and interface details retain the original Windows layout.
 
 For a single command:
 
@@ -28,11 +28,28 @@ node src/cli.ts --help
 node src/cli.ts drivers
 node src/cli.ts interfaces
 node src/cli.ts networks
+node src/cli.ts networks --raw
 ```
 
-You can also use `npm run start -- networks`. Direct commands preserve the netsh exit code and support output redirection. The interactive menu requires a TTY for both input and output; otherwise, specify a command explicitly.
+You can also use `npm run start -- networks` or `npm run start -- networks --raw`. Direct commands preserve netsh failure codes and support output redirection. A decode or parse failure returns code 1 and shows the raw bytes with an explanation. The interactive menu requires a TTY for both input and output; otherwise, specify a command explicitly.
 
-Chalk styles the help title and errors according to terminal color support. Raw netsh output is forwarded unchanged. Disable colors with `FORCE_COLOR=0` (PowerShell: `$env:FORCE_COLOR = '0'`).
+Chalk styles the help title and errors according to terminal color support. `networks --raw` forwards netsh output unchanged. Disable colors with `FORCE_COLOR=0` (PowerShell: `$env:FORCE_COLOR = '0'`).
+
+## Network observations
+
+The network parser supports English and Russian netsh field labels. Each BSSID produces a separate observation with `ssid`, `bssid`, `signalQualityPercent`, `bandGHz`, `channel` and `radioType`. Missing or invalid measurements remain `null`; hidden SSIDs remain empty strings. The table displays these as an em dash and `(hidden)` respectively. Signal quality is a percentage, not measured RSSI in dBm. No band, frequency or distance is inferred from other fields.
+
+Only this subset is currently normalized; authentication, encryption, rates and other fields remain available through `networks --raw`. No observations are saved to disk. Network names remain in their original language; terminal control sequences are removed from table labels for display without changing the parsed values.
+
+Captured network output is decoded strictly as UTF-8 by default, with UTF-16 byte-order mark detection. `chcp` is not used to guess the encoding: the observed redirected encoding can differ from the console code page. If your driver emits a different encoding, set it explicitly before running the CLI:
+
+```powershell
+$env:WIFI_MAPPER_ENCODING = 'ibm866'
+npm run start -- networks
+Remove-Item Env:WIFI_MAPPER_ENCODING
+```
+
+Another supported label is `windows-1251`. This setting affects captured network text only. Unsupported output or decoding failures fall back to raw bytes and an error instead of claiming that no networks exist. Only an explicit zero-network message is treated as an empty scan. Other netsh languages are not supported by the parser yet; use raw mode for inspection.
 
 ## Language
 
@@ -86,13 +103,17 @@ src/
   cli.test.ts            CLI behavior tests
   netsh.ts               Windows process access
   netsh.test.ts          Process startup and completion tests
+  network-parser.ts     Network observation types, decoding and parsing
+  network-parser.test.ts  Synthetic English/Russian output tests
+  networks.ts            Network collection and table presentation
+  networks.test.ts       Table, error and raw fallback tests
   session.ts             Interactive Clack menu
   session.test.ts        Repeated selection and exit tests
   terminal.ts            Terminal screen and scrollback clearing
   terminal.test.ts       TTY and redirected output checks
 ```
 
-Inspect raw output before writing a parser: available fields depend on the Windows version, driver and system language. The CLI launches netsh directly without a shell, inherits its streams and forwards its exit code for direct commands. Redirected output retains the encoding used by netsh; UTF-8 is not guaranteed. A future parser must handle encoding explicitly.
+Available fields depend on the Windows version, driver and system language. The CLI launches netsh directly without a shell. Raw commands inherit its streams; table mode captures stdout and stderr as bytes with a 30-second timeout and a 2 MiB limit per stream. Raw redirected output retains the encoding used by netsh; UTF-8 is not guaranteed.
 
 ## Commands and available data
 

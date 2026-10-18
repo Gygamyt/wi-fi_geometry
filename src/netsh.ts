@@ -1,4 +1,4 @@
-import {spawn} from 'node:child_process';
+import {execFile, spawn} from 'node:child_process';
 import {join} from 'node:path';
 
 const commands = {
@@ -9,9 +9,7 @@ const commands = {
 
 export type WifiCommand = keyof typeof commands;
 
-// Inherit streams to avoid decoding localized output as UTF-8.
-// For now, forward raw OS output rather than normalized measurements.
-export function runNetsh(command: WifiCommand): Promise<number> {
+function getNetshPath(): string {
     if (process.platform !== 'win32') {
         throw new Error('Collecting data through netsh requires Windows.');
     }
@@ -21,8 +19,14 @@ export function runNetsh(command: WifiCommand): Promise<number> {
         throw new Error('The SystemRoot environment variable containing the Windows path is missing.');
     }
 
+    return join(windowsDirectory, 'System32', 'netsh.exe');
+}
+
+// Raw mode inherits streams without decoding or rewriting Windows output.
+export function runNetsh(command: WifiCommand): Promise<number> {
+    const executable = getNetshPath();
     return new Promise((resolve, reject) => {
-        const child = spawn(join(windowsDirectory, 'System32', 'netsh.exe'), commands[command], {
+        const child = spawn(executable, commands[command], {
             stdio: 'inherit',
             shell: false,
             windowsHide: true,
@@ -36,6 +40,26 @@ export function runNetsh(command: WifiCommand): Promise<number> {
                 return;
             }
             resolve(code ?? 1);
+        });
+    });
+}
+
+export type NetshOutput = {exitCode: number; stdout: Buffer; stderr: Buffer};
+
+export function captureNetworks(): Promise<NetshOutput> {
+    const executable = getNetshPath();
+    return new Promise((resolve, reject) => {
+        execFile(executable, commands.networks, {
+            encoding: 'buffer',
+            windowsHide: true,
+            timeout: 30_000,
+            maxBuffer: 2 * 1024 * 1024,
+        }, (error, stdout, stderr) => {
+            if (error && (typeof error.code !== 'number' || error.killed || error.signal)) {
+                reject(error);
+                return;
+            }
+            resolve({exitCode: typeof error?.code === 'number' ? error.code : 0, stdout, stderr});
         });
     });
 }
