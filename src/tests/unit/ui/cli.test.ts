@@ -3,10 +3,12 @@ import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
 import {runNetsh} from '../../../collectors/netsh.ts';
 import {runSession} from '../../../ui/session.ts';
 import {showNetworks} from '../../../ui/networks.ts';
+import {runRecording} from '../../../ui/record.ts';
 
 vi.mock('../../../collectors/netsh.ts', () => ({runNetsh: vi.fn()}));
 vi.mock('../../../ui/session.ts', () => ({runSession: vi.fn()}));
 vi.mock('../../../ui/networks.ts', () => ({showNetworks: vi.fn()}));
+vi.mock('../../../ui/record.ts', () => ({runRecording: vi.fn()}));
 
 const originalArgv = process.argv;
 const originalExitCode = process.exitCode;
@@ -29,6 +31,7 @@ beforeEach(() => {
     chalkStderr.level = 0;
     vi.mocked(runNetsh).mockResolvedValue(0);
     vi.mocked(showNetworks).mockResolvedValue(0);
+    vi.mocked(runRecording).mockResolvedValue(0);
     vi.spyOn(console, 'log').mockImplementation(() => {});
     vi.spyOn(console, 'error').mockImplementation(() => {});
 });
@@ -124,6 +127,14 @@ describe('CLI', () => {
         await runCli(['networks']);
         expect(showNetworks).toHaveBeenCalledOnce();
         expect(runNetsh).not.toHaveBeenCalled();
+        expect(process.exitCode).toBe(0);
+    });
+
+    it('routes recording arguments without launching a one-shot command', async () => {
+        await runCli(['record', '02:00:00:00:00:01', '--count', '1']);
+        expect(runRecording).toHaveBeenCalledExactlyOnceWith(['02:00:00:00:00:01', '--count', '1']);
+        expect(runNetsh).not.toHaveBeenCalled();
+        expect(showNetworks).not.toHaveBeenCalled();
         expect(process.exitCode).toBe(0);
     });
 
