@@ -1,0 +1,19 @@
+node_modules/
+dist/
+coverage/
+measurements/
+*.log
+
+# Локальные настройки IDE
+.idea/
+.vscode/
+
+# Локальное окружение
+.env
+.env.*
+!.env.example
+
+# Служебные файлы TypeScript и ОС
+*.tsbuildinfo
+.DS_Store
+Thumbs.db
