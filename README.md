@@ -1,6 +1,6 @@
 # Wi-Fi Mapper
 
-A research pet project exploring the Wi-Fi data available on Windows with a laptop's built-in adapter. The current v0.1 collects netsh output and displays network observations in a table. Measurement history, analysis, Rust and graphical interfaces are future work.
+A research pet project exploring the Wi-Fi data available on Windows with a laptop's built-in adapter. v0.1 provides network inspection; the first v0.2 step adds bounded signal recording to local files. Analysis, Rust and graphical interfaces remain future work.
 
 ## Getting started
 
@@ -55,6 +55,26 @@ Another supported label is `windows-1251`. This setting affects captured network
 
 All project-owned text is English for now, including prompts, comments, tests and documentation. Localization is planned for a later stage; no i18n framework or language selection is implemented yet. Windows messages and network names retain their original language.
 
+## Signal recording: first v0.2 step
+
+Use Available networks to find a BSSID, then record that exact identifier with a direct command. The identifier below is synthetic; replace it with your target:
+
+```powershell
+npm run start -- record 02:00:00:00:00:01 --count 10 --interval 2000
+```
+
+Defaults: 10 attempts, a 2000 ms wait after each completed attempt, and a unique new file in `measurements/`. Calls never overlap; the actual start-to-start interval includes collection time. Limits: 1–1000 attempts and 1000–3600000 ms between completed attempts. Override the destination with `--output measurements/experiment.jsonl`; an existing file is never overwritten.
+
+This first recording workflow is a direct command. The interactive menu still provides inspection only. Press Ctrl+C to stop; completed records are retained and the exit code is 130. The last interrupted attempt is not invented as a completed sample. Successful recording exits with 0; any recorded collection errors produce exit code 1; invalid arguments produce exit code 2.
+
+Each UTF-8 JSONL line contains schema version 1, source `netsh`, the target BSSID, sample index, UTC collection start/completion times, an observation or null, command exit code, error details and original stdout/stderr bytes as base64. Status is one of:
+
+- `observed`: the target BSSID was listed; missing signal fields still remain null.
+- `missing`: collection and parsing succeeded, but the target was not listed.
+- `error`: collection, decoding or parsing failed; this is separate from absence.
+
+Raw bytes preserve the entire command result for later reanalysis. No passwords are collected. `measurements/` is gitignored; custom output paths are your responsibility. These are repeated observations of Windows' reported data, potentially cached, not guaranteed fresh radio scans or measured RSSI in dBm. Analysis and comparison commands are not implemented yet.
+
 ## Development
 
 Use **npm** only. `package-lock.json` pins dependency versions; use `npm ci` for repeatable installation and `npm install` when changing dependencies.
@@ -73,7 +93,7 @@ npm run test:run
 - `test` runs Vitest in watch mode and reruns related tests after changes. Press `q` or Ctrl+C to exit.
 - `test:run` runs the tests once and exits.
 
-Tests live beside the implementation in `*.test.ts` files. Add tests for new logic, errors and edge cases. Current tests cover the CLI, interactive session and netsh wrapper using mocks; they do not require real Wi-Fi hardware or Windows permissions. They do not verify the actual driver or scan freshness.
+Tests live separately under `src/tests/unit/` and `src/tests/integration/`, using `*.test.ts` names. Unit test folders mirror the source responsibilities. Current tests cover CLI behavior, collection, parsing, recording and storage. OS calls use mocks; storage tests use isolated temporary files. No tests require real Wi-Fi hardware or Windows permissions, and they do not establish driver accuracy or scan freshness.
 
 Node.js executes TypeScript by stripping supported type annotations; it does not check types or read `tsconfig.json`. Type checking includes source files, tests and the Vitest configuration. Key compiler settings:
 
@@ -99,18 +119,18 @@ tsconfig.json            Type checking without a build
 eslint.config.js         Code checks and formatting rules
 vitest.config.ts         Node.js environment and mock isolation
 src/
-  cli.ts                 Command selection, help and errors
-  cli.test.ts            CLI behavior tests
-  netsh.ts               Windows process access
-  netsh.test.ts          Process startup and completion tests
-  network-parser.ts     Network observation types, decoding and parsing
-  network-parser.test.ts  Synthetic English/Russian output tests
-  networks.ts            Network collection and table presentation
-  networks.test.ts       Table, error and raw fallback tests
-  session.ts             Interactive Clack menu
-  session.test.ts        Repeated selection and exit tests
-  terminal.ts            Terminal screen and scrollback clearing
-  terminal.test.ts       TTY and redirected output checks
+  cli.ts                 Minimal executable entry point
+  collectors/            Windows process access and byte decoding
+  parsers/               netsh text interpretation
+  models/                Network and measurement types
+  services/              Recording workflow and option validation
+  storage/               JSONL persistence
+  ui/                    Commands, menu and presentation
+  tests/
+    unit/                Tests grouped by source responsibility
+    integration/         Complete workflow tests
+ai_reports/              Local AI task reports (gitignored)
+measurements/            Local recordings (gitignored)
 ```
 
 Available fields depend on the Windows version, driver and system language. The CLI launches netsh directly without a shell. Raw commands inherit its streams; table mode captures stdout and stderr as bytes with a 30-second timeout and a 2 MiB limit per stream. Raw redirected output retains the encoding used by netsh; UTF-8 is not guaranteed.
@@ -143,11 +163,11 @@ If netsh explicitly requests location permission, open **Settings > Privacy & se
 
 If error 5, Access denied or requires elevation persists, investigate the execution context and Windows policies separately. Running as administrator is not a universal fix for location permissions. Missing interfaces and unavailable WLAN services are reported by netsh.
 
-## First-step completion criteria
+## Validated v0.1 baseline
 
-Run all three commands and inspect the fields and access restrictions on this laptop. Then review the output together and choose one field for the next small v0.1 change. Do not commit real SSIDs, BSSIDs or MAC addresses.
+All three inspection commands have been exercised, including network table and raw modes. Preserve this baseline while extending recording in v0.2. Do not commit real SSIDs, BSSIDs or MAC addresses.
 
-Table and raw network output validation is recorded in [the v0.1 validation report](docs/validation-v0.1.md), including live Windows checks, automated coverage and remaining limits.
+v0.1 table and raw output validation is complete. Local task and validation reports are written to `ai_reports/`, which is gitignored. Durable setup and usage instructions remain in this README.
 
 ## References
 

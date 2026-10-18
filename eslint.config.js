@@ -4,7 +4,7 @@ import globals from 'globals';
 import tseslint from 'typescript-eslint';
 
 export default [
-    {ignores: ['node_modules/**', 'dist/**', 'measurements/**', '.idea/**', '.vscode/**']},
+    {ignores: ['node_modules/**', 'dist/**', 'measurements/**', 'ai_reports/**', '.idea/**', '.vscode/**']},
     js.configs.recommended,
     ...tseslint.configs.recommended,
     {

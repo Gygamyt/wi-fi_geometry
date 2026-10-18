@@ -2,8 +2,8 @@
 
 ## Goal and current scope
 - This pet project explores Wi-Fi data on Windows using the laptop's built-in adapter.
-- Stay within v0.1: a TypeScript CLI collecting data through netsh.
-- Work on one small technical task per iteration. Discuss history, Rust, UI, mobile apps and reconstruction before moving to those stages.
+- v0.1 network inspection is validated. The current scope is v0.2: repeated netsh observations and local measurement history.
+- Work on one small technical task per iteration. Discuss Rust, graphical UI, mobile apps and reconstruction before moving to those stages.
 - Do not make additional hardware a prerequisite.
 
 ## Collaboration
@@ -11,6 +11,7 @@
 - Prefer small working changes; avoid generating large amounts of code in advance.
 - Offer alternatives when there is a meaningful tradeoff.
 - Separate confirmed capabilities from hypotheses and state limitations explicitly.
+- Write task and validation reports as English Markdown files in `ai_reports/`. That folder is gitignored; do not place generated AI reports in tracked documentation folders. Keep durable usage documentation in README.md and project rules in docs/agents/.
 
 ## Language and future localization
 - English only for now: UI labels, choices, prompts, help, errors, comments, test descriptions, documentation and package metadata.
@@ -24,10 +25,11 @@
 - Do not make Python mandatory without a concrete reason.
 - Add dependencies and abstraction layers only when currently needed.
 - Keep OS access separate from the CLI; introduce storage and analysis modules when those tasks arise.
+- Organize source files by responsibility: collectors/ for OS collection and byte decoding, parsers/ for text interpretation, models/ for shared domain types, services/ for workflows, storage/ for persistence, and ui/ for CLI presentation. Keep src/cli.ts as a minimal entry point. Do not create empty folders or abstractions for hypothetical future work.
 - Allow a future switch from netsh to Native Wi-Fi API without building a universal framework in advance.
 - Account for netsh output localization and encoding; it is not a stable machine-readable format.
 - Network parsing supports English and Russian OS labels; synthetic fixtures may contain those original labels. Keep missing measurements as null, empty SSIDs as empty strings, and provide raw output on request. Do not infer encoding from chcp; decode strictly and use WIFI_MAPPER_ENCODING for explicit overrides.
-- Add colocated Vitest unit tests (`*.test.ts`) for new or changed logic, covering successful behavior, errors and edge cases.
+- Put all tests under src/tests/, separate from production modules: unit/ mirrors logical source folders, integration/ covers complete workflows, and fixtures/ may hold reusable synthetic input. Use `*.test.ts` names and cover successful behavior, errors and edge cases.
 - Use `npm test` in watch mode during development. Mock OS calls in unit tests: do not run real netsh or depend on Wi-Fi hardware, Windows permissions or local measurements.
 
 ## Data and experiments
@@ -37,6 +39,8 @@
 - Do not promise geometry reconstruction without experimental evidence.
 - Do not assume each netsh invocation triggers a fresh radio scan.
 - Preserve original measurements for later analysis when storage is introduced.
+- Record JSON Lines under measurements/ by default, preserving original stdout/stderr bytes as base64. Use explicit observed, missing and error statuses; a missing BSSID is not a 0% signal measurement. Timestamp collection start and completion without claiming a fresh radio scan.
+- Never overwrite an existing recording. Run collection sequentially with a bounded sample count, support cancellation, and close files after success or failure.
 - Do not commit real SSIDs, BSSIDs, MAC addresses or other local measurements.
 - Do not read or export Wi-Fi passwords; they are not needed for the current task.
 
@@ -49,4 +53,5 @@
 - Install with `npm ci` when the lockfile exists; use `npm install` after dependency changes.
 - Before completing JS/TS changes, run `npm run lint`, `npm run typecheck` and `npm run test:run`.
 - Commands: `drivers`, `interfaces`, `networks` (table), `networks --raw` (original output).
+- First v0.2 command: `record <BSSID> --count <n> --interval <ms> --output <new-file.jsonl>`. Recording is currently a direct CLI command, not a menu action.
 - Use read-only `netsh wlan show` commands. Do not change OS settings or permissions automatically.

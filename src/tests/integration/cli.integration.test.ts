@@ -1,8 +1,11 @@
 import {EventEmitter} from 'node:events';
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
 
-const {spawnMock, execFileMock} = vi.hoisted(() => ({spawnMock: vi.fn(), execFileMock: vi.fn()}));
+const {spawnMock, execFileMock, writeMock, closeMock} = vi.hoisted(() => ({spawnMock: vi.fn(), execFileMock: vi.fn(), writeMock: vi.fn(), closeMock: vi.fn()}));
 vi.mock('node:child_process', () => ({spawn: spawnMock, execFile: execFileMock}));
+vi.mock('../../storage/measurement-writer.ts', () => ({
+    openMeasurementWriter: async () => ({write: writeMock, close: closeMock}),
+}));
 
 // Synthetic records exercise the full CLI-to-parser path without real Wi-Fi.
 const output = Buffer.from(`Имя интерфейса: Test adapter
@@ -41,6 +44,8 @@ beforeEach(() => {
     vi.spyOn(process.stdout, 'write').mockReturnValue(true);
     vi.spyOn(process.stderr, 'write').mockReturnValue(true);
     execFileMock.mockImplementation((_file, _args, _options, callback) => callback(null, output, Buffer.alloc(0)));
+    writeMock.mockResolvedValue(undefined);
+    closeMock.mockResolvedValue(undefined);
     spawnMock.mockImplementation(() => {
         const child = new EventEmitter();
         queueMicrotask(() => child.emit('close', 0, null));
@@ -60,6 +65,17 @@ async function runCli(args: string[]) {
 }
 
 describe('CLI network integration', () => {
+    it('records a complete structured observation and original bytes through the real CLI workflow', async () => {
+        await runCli(['record', '02:00:00:00:00:01', '--count', '1', '--output', 'measurements/synthetic.jsonl']);
+        expect(process.exitCode).toBe(0);
+        expect(writeMock).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({
+            schemaVersion: 1, source: 'netsh', sampleIndex: 1, targetBssid: '02:00:00:00:00:01', status: 'observed',
+            observation: expect.objectContaining({ssid: 'Example', signalQualityPercent: 78}),
+            raw: {stdoutBase64: output.toString('base64'), stderrBase64: ''},
+        }));
+        expect(closeMock).toHaveBeenCalledOnce();
+    });
+
     it('collects, decodes and displays every BSSID including a hidden name', async () => {
         await runCli(['networks']);
         expect(console.table).toHaveBeenCalledExactlyOnceWith([
